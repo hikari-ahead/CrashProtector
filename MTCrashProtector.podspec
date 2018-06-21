@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
   Empty Now
                    DESC
 
-  s.homepage     = "http://github.com/Nanfo1Fhzh/MTCrashProtector"
+  s.homepage     = "https://github.com/Nanfo1Fhzh/CrashProtector"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
 
 
@@ -80,7 +80,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "http://github.com/Nanfo1Fhzh/MTCrashProtector.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/Nanfo1Fhzh/CrashProtector.git", :tag => "#{s.version}" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
