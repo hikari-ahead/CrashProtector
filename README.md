@@ -228,14 +228,14 @@ SEL oriSEL4 = NSSelectorFromString(@"dealloc");
     这个SEL其实是重载了操作符`[]`，不要直接调用这个方法，通过实验测试得知，iOS 11开始 `__NSArrayI`，`__NSArrayM` 对`objectAtIndexedSubscript:`进行了重写，所以需要hook，其他版本只需要hook父类`NSArray`中的这个方法即可。
     
 4. 可变部分的Methods
-    
+
     针对`__NSArrayM`需要hook以下方法：
     
     ```objC
-  @selector(addObject:);    
-  @selector(insertObject:atIndex:)
-  @selector(removeObjectAtIndex:))
-  @selector(replaceObjectAtIndex:withObject:)
+    @selector(addObject:);    
+    @selector(insertObject:atIndex:)
+    @selector(removeObjectAtIndex:))
+    @selector(replaceObjectAtIndex:withObject:)
     ```
     
     针对`NSMutableArray`需要hook以下方法：
