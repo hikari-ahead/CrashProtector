@@ -78,7 +78,7 @@ pod spec lint *.podspec --allow-warnings
 ```
 验证podspec通过即可。
 
-###### 目录结构
+#### 目录结构
 
 ```c
 => Classes
@@ -94,7 +94,7 @@ pod spec lint *.podspec --allow-warnings
 
 ## 0x3. 实现
 
-###### Unrecognized Selector Crash
+#### Unrecognized Selector Crash
 
 Runtime msgSend流程：
 
@@ -113,7 +113,7 @@ Runtime msgSend流程：
 上面流程可以看出：4，5，6三步都可以进行防护，选择5:`forwardingTargetForSelector:`的原因是因为：`resolveInstanceMethod:`或者`resolveClassMethod:`会给当前类添加一些不必要的方法，而`forwardInvocation:`需要生成一个`invocation`对象会造成额外的内存开销。这个组件的实现是添加一个stub类，然后所有触发的（需要排除为了特殊目的而特意实现的）`forwardingTargetForSelector:`指向这个stub类的单例，因为这个stub类也不一定（大部分情况是没有）包含这个method实现，所以会继续调用stub类的`resolvexxxxMethod:`方法，在这个地方去动态的为stub类添加对应的实现，来保证程序不会crash并且也不会污染已有的类。
 
 
-###### Notification Crash 
+#### Notification Crash 
 
 这个Module只针对iOS 9以下，见官方文档：
 
@@ -163,7 +163,7 @@ SEL oriSEL6 = @selector(postNotificationName:object:);
 
 重点在于维护一个`notificationInfos`,通过不同的Method添加或者删除能够正确的匹配到已有的通知，保证不会重复添加，不会重复移除。
 
-###### KVO Crash 
+#### KVO Crash 
 
 KVO Crash防护的实现和Notification Crash防护相似，都是使用一个stub去代理检查是否已经注册过相同的观察者（通知），然后再进行真正的添加或删除操作。
 
@@ -186,10 +186,10 @@ SEL oriSEL4 = NSSelectorFromString(@"dealloc");
 
 在NSObject执行dealloc方法时，根据设置的关联对象`mtcp_hasAddedObserver`来判断是否需要移除全部的observer来防止crash发生。
 
-###### Container Crash
+#### Container Crash
 
-（一） NSArray类簇
-
+以NSArray类簇为例：
+    
 | Class Name | Description  |
 | --- | --- |
 | NSArray | 不可变数组的工厂类 |  
@@ -201,31 +201,71 @@ SEL oriSEL4 = NSSelectorFromString(@"dealloc");
 | __NSSingleObjectArrayI | 单一元素不可变数组对应的类 |
 | __NSArrayReversed | 作为一个NSArray的代理并以相反的顺序呈现原Array的内容 |
 | __NSCFArray| CFArrayRef或CFMutableArrayRef。现在大多数CFArrayRefs都是__NSArray*，通过CF创建 | 
-
+    
 以上信息可以通过自身实验得到，但是不同的iOS版本之间可能会有区别，比如说在iOS 8及以下的系统中不存在`__NSArray0`这个私有类。其他更多详细的类簇可以查看：[Class Clusters](https://gist.github.com/Catfish-Man/bc4a9987d4d7219043afdf8ee536beb2)
 
 1. init
-
-由于所有的Array都是有`__NSPlaceholderArray`来进行初始化的，所以只需要hook
-
-```objC
-- [__NSPlaceholderArray initWithObjects:count:]
-```
+    
+    由于所有的Array都是有`__NSPlaceholderArray`来进行初始化的，所以只需要hook
+    
+    ```objC
+    - [__NSPlaceholderArray initWithObjects:count:]
+    ```
 即可，根据传入的cnt和C style数组检测[0...cnt-1]中是否存在空指针，避免崩溃。
-
+    
 2. objectAtIndex
-
-CF中使用到的`__NSCFArray`不做处理，针对下列类进行`objectAtIndex:`进行hook
-
-```objC
-@"NSArray", @"__NSArray0", @"__NSArrayI", @"__NSArrayM", @"__NSPlaceholderArray", @"__NSArrayReversed", @"__NSSingleObjectArrayI"
-```
-
-额外注意iOS 10以下不存在`__NSSingleObjectArrayI`，iOS 9以下不存在`__NSArray0`即可
-
+    
+    CF中使用到的`__NSCFArray`不做处理，针对下列类进行`objectAtIndex:`进行hook
+    
+    ```objC
+    @"NSArray", @"__NSArray0", @"__NSArrayI", @"__NSArrayM", @"__NSPlaceholderArray", @"__NSArrayReversed", @"__NSSingleObjectArrayI"
+    ```
+    
+    额外注意iOS 10以下不存在`__NSSingleObjectArrayI`，iOS 9以下不存在`__NSArray0`即可
+    
 3. objectAtIndexedSubscript
+    
+    这个SEL其实是重载了操作符`[]`，不要直接调用这个方法，通过实验测试得知，iOS 11开始 `__NSArrayI`，`__NSArrayM` 对`objectAtIndexedSubscript:`进行了重写，所以需要hook，其他版本只需要hook父类`NSArray`中的这个方法即可。
+    
+4. 可变部分的Methods
+    
+    针对`__NSArrayM`需要hook以下方法：
+    
+    ```objC
+  @selector(addObject:);    
+  @selector(insertObject:atIndex:)
+  @selector(removeObjectAtIndex:))
+  @selector(replaceObjectAtIndex:withObject:)
+    ```
+    
+    针对`NSMutableArray`需要hook以下方法：
+    
+    ```objC
+    @selector(insertObjects:atIndexes:)
+    @selector(removeObjectsAtIndexes:)
+    @selector(removeObject:inRange:)
+    @selector(removeObjectIdenticalTo:inRange:)
+    @selector(replaceObjectsAtIndexes:withObjects:)
+    @selector(replaceObjectsInRange:withObjectsFromArray:range:)
+    @selector(replaceObjectsInRange:withObjectsFromArray:)
+    ```
+    
+    由于系统版本的差异，以下方法需要根据iOS版本号来区分需要hook的具体类：
+    
+    ```objC
+    // iOS 10 以下系统，__NSArrayM没有重写NSMutableArray的Method:
+    Class cls = [UIDevice currentDevice].systemVersion.floatValue < 10.0 ? NSClassFromString(@"NSMutableArray") : NSClassFromString(@"__NSArrayM");
+    @selector(removeObjectsInRange:)
+    @selector(setObject:atIndexedSubscript:)
+    ```
 
-这个SEL其实是重载了操作符`[]`，不要直接调用这个方法，通过实验测试得知，iOS 11开始 `__NSArrayI`，`__NSArrayM` 对`objectAtIndexedSubscript:`进行了重写，所以需要hook，其他版本只需要hook父类`NSArray`中的这个方法即可。
+`NSDictionary类簇`的实现与`NSArray类簇`相似，重点是搞清楚各iOS版本之间子类对父类方法重写的情况，hook正确的方法，否则可能会出现循环调用最终程序崩溃的情况。
 
+额外的，组件还对`NSObject`类`valueForUndefinedKey:`和`valueForKey:`进行了hook处理。
 
+#### NSTimer
+
+主要为了解决`NSTimer`与`TureTarget`相互强引用导致不手动调用`invalidate`方法`TureTarget`无法自动释放的问题。加入中间类`TimerStub`作为`Timer`的`SubTarget`，并且储存真实的`TrueTarget`与`SEL`，其中`TimerStub`弱引用真实的`TrueTarget`，保证其可以自由的释放。每当目标函数触发时去检查`TrueTarget`是否还存在，存在的话去执行目标函数，不存在的话调用`- [Timer invalidate]`去释放。
+
+![time](http://ocm1152jt.bkt.clouddn.com/timer.png)
 
