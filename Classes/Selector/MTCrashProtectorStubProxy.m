@@ -6,7 +6,10 @@
 //
 
 #import "MTCrashProtectorStubProxy.h"
+#import "MTCrashProtectorReporter.h"
 #import <objc/runtime.h>
+#import "execinfo.h"
+#include "unistd.h"
 
 static MTCrashProtectorStubProxy *sharedProxy;
 @implementation MTCrashProtectorStubProxy
@@ -22,8 +25,9 @@ static MTCrashProtectorStubProxy *sharedProxy;
 + (BOOL)resolveClassMethod:(SEL)sel {
     Class cls = [self class];
     Method method = class_getClassMethod(cls, @selector(stubClassMethod));
-    BOOL add = class_addMethod(cls, sel, method_getImplementation(method), method_getTypeEncoding(method));
-    // TODO: fabric事件的上报+错误提醒
+    class_addMethod(cls, sel, method_getImplementation(method), method_getTypeEncoding(method));
+    NSError *error = [NSError errorWithDomain:MTCrashProtectorErrorDomain code:0 userInfo:@{MTCrashProtectorReporterReasonKey : [NSString stringWithFormat:@"unrecognized selector: %@", NSStringFromSelector(sel)]}];
+    [[MTCrashProtectorReporter shareInstance] reportNonFatalEventWithError:error];
     return YES;
 }
 
@@ -37,7 +41,8 @@ static MTCrashProtectorStubProxy *sharedProxy;
     // 这里不需要判断signature了，如果存在method，则不会调用resolve
     Method method = class_getInstanceMethod(cls, @selector(stubInstanceMethod));
     class_addMethod(cls, sel, method_getImplementation(method), method_getTypeEncoding(method));
-    // TODO: fabric事件的上报+错误提醒
+    NSError *error = [NSError errorWithDomain:MTCrashProtectorErrorDomain code:0 userInfo:@{MTCrashProtectorReporterReasonKey : [NSString stringWithFormat:@"unrecognized selector: %@", NSStringFromSelector(sel)]}];
+    [[MTCrashProtectorReporter shareInstance] reportNonFatalEventWithError:error];
     return YES;
 }
 

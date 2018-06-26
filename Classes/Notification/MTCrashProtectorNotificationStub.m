@@ -7,6 +7,7 @@
 #import "MTCrashProtectorNotificationStub.h"
 #import "MTCrashProtectorNotificationStubInfo.h"
 #import "NSNotificationCenter+MTCrashProtectorNotificationDelegate.h"
+#import "MTCrashProtectorReporter.h"
 
 @interface MTCrashProtectorNotificationStub()
 @property (nonatomic, weak) NSNotificationCenter *target;
@@ -27,6 +28,7 @@
 - (id<NSObject>)stub_addObserverForName:(NSNotificationName)name object:(id)obj queue:(NSOperationQueue *)queue usingBlock:(void (^)(NSNotification *note))block {
     MTCrashProtectorNotificationStubInfo *info = [[MTCrashProtectorNotificationStubInfo alloc] initWithName:name object:obj queue:queue block:block];
     if ([self isInfoAlreadyExists:info]) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, could add an duplicate observer name:%@, obj:%p, queue:%@, block:%@ on defaultCenter", [self class],name, obj, queue, block]];
         NSLog(@"could add an duplicate observer name:%@, obj:%p, queue:%@, block:%@ on defaultCenter", name, obj, queue, block);
         return nil;
     }else {
@@ -39,6 +41,7 @@
 - (void)stub_addObserver:(id)observer selector:(SEL)aSelector name:(NSNotificationName)aName object:(id)anObject {
     MTCrashProtectorNotificationStubInfo *info = [[MTCrashProtectorNotificationStubInfo alloc] initWithObserver:observer selector:aSelector name:aName object:anObject];
     if ([self isInfoAlreadyExists:info]) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, could add an duplicate observer:%@, SEL:%p, name:%@, object:%@ on defaultCenter", [self class],observer, aSelector, aName, anObject]];
         NSLog(@"could add an duplicate observer:%@, SEL:%p, name:%@, object:%@ on defaultCenter", observer, aSelector, aName, anObject);
     }else {
         [self.target mtcpInstance_addObserver:observer selector:aSelector name:aName object:anObject];
@@ -54,6 +57,7 @@
         [self.target mtcpInstance_removeObserver:observer name:aName object:anObject];
         [self.notificationInfos removeObjectsInArray:matchedInfos];
     }else {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, has not register any notification for observer:%@, name:%@, object:%@ cannot remove", [self class], observer, aName, anObject]];
         NSLog(@"has not register any notification for observer:%@, name:%@, object:%@ cannot remove", observer, aName, anObject);
     }
 }
@@ -64,6 +68,7 @@
         [self.target mtcpInstance_removeObserver:observer];
         [self.notificationInfos removeObjectsInArray:matchedInfos];
     }else {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, has not register any notification on observer:%@, cannot remove", [self class], observer]];
         NSLog(@"has not register any notification on observer:%@, cannot remove", observer);
     }
 }

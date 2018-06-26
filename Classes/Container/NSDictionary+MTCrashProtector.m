@@ -30,10 +30,14 @@
         id const obj = objects[i];
         id<NSCopying> const key = keys[i];
         if (!obj) {
+            NSError *error = [NSError errorWithDomain:MTCrashProtectorErrorDomain code:0 userInfo:@{MTCrashProtectorReporterReasonKey : [NSString stringWithFormat:@"cls:%@, obj cannot be nil in a dic", [self class]]}];
+            [[MTCrashProtectorReporter shareInstance] reportNonFatalEventWithError:error];
             NSLog(@"obj cannot be nil in a dic");
             return nil;
         }
         if (!key) {
+            NSError *error = [NSError errorWithDomain:MTCrashProtectorErrorDomain code:0 userInfo:@{MTCrashProtectorReporterReasonKey : [NSString stringWithFormat:@"cls:%@, key cannot be nil in a dic", [self class]]}];
+            [[MTCrashProtectorReporter shareInstance] reportNonFatalEventWithError:error];
             NSLog(@"key cannot be nil in a dic");
             return nil;
         }

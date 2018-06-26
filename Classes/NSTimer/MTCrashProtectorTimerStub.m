@@ -6,8 +6,10 @@
 //
 
 #import "MTCrashProtectorTimerStub.h"
+#import "MTCrashProtectorReporter.h"
 
 @interface MTCrashProtectorTimerStub()
+@property (nonatomic, copy) NSString *targetName;
 @property (nonatomic, weak) id target;
 @property (nonatomic, assign) SEL sel;
 @end
@@ -17,16 +19,25 @@
     if (self) {
         self.sel = sel;
         self.target = target;
+        self.targetName = NSStringFromClass([target class]);
     }
     return self;
 }
 
 - (void)stubTargetTimerFired:(NSTimer *)t {
     if (self.target && [self.target respondsToSelector:self.sel]) {
-        [self.target performSelector:self.sel withObject:t];
+        if ([self.target respondsToSelector:self.sel]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            [self.target performSelector:self.sel withObject:t];
+#pragma clang diagnostic pop
+        }else {
+            NSLog(@"error, target:%@ cannot perform the sel:%@", self.target, NSStringFromSelector(self.sel));
+        }
     }else {
         // 卸载timer，错误报告
-        NSLog(@"target已经释放，自动invalidate timer: %@", t);
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, target (cls:%@) has already been released，automaticlly invalidate timer: %@", [self class], self.targetName, t]];
+        NSLog(@"target has already been released，automaticlly invalidate timer: %@", t);
         [t invalidate];
     }
 }

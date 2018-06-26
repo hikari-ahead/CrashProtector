@@ -10,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MTCrashProtectorCallStackUtil : NSObject
-+ (BOOL)isInTargetBundleWithClass:(Class)cls selector:(SEL)aSelector;
++ (BOOL)isCalledByMainBundle;
 @end
 
 NS_ASSUME_NONNULL_END

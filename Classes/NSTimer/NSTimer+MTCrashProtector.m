@@ -9,10 +9,15 @@
 #import "NSTimer+MTCrashProtector.h"
 #import "MTCrashProtector.h"
 #import "MTCrashProtectorTimerStub.h"
+#import "MTCrashProtectorCallStackUtil.h"
 
 static const char *kMTCrashProtectorTimerStubAssociateKey = "kMTCrashProtectorTimerStubAssociateKey";
+static const char *kMTCrashProtectorTargetAssociateKey = "kMTCrashProtectorTargetAssociateKey";
+static const char *kMTCrashProtectorSELAssociateKey = "kMTCrashProtectorSELAssociateKey";
 @interface NSTimer ()
 @property (nonatomic, strong) MTCrashProtectorTimerStub *mtcp_timerStub;
+@property (nonatomic, strong) id mtcp_target;
+@property (nonatomic, assign) SEL mtcp_sel;
 @end
 
 @implementation NSTimer (MTCrashProtector)
@@ -39,20 +44,29 @@ static const char *kMTCrashProtectorTimerStubAssociateKey = "kMTCrashProtectorTi
 }
 
 - (instancetype)__NSCFTimer_mtcpInstance_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
-    return [self innerInitWithFireDate:date interval:ti target:t selector:s userInfo:ui repeats:rep];
+    [self mtcp_prepareInitializationWithTarget:t Selector:s];
+    return [self __NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_target selector:self.mtcp_sel userInfo:ui repeats:rep];
 }
 
 - (instancetype)mtcpInstance_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
-    return [self innerInitWithFireDate:date interval:ti target:t selector:s userInfo:ui repeats:rep];
+    [self mtcp_prepareInitializationWithTarget:t Selector:s];
+    return [self mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_target selector:self.mtcp_sel userInfo:ui repeats:rep];
 }
 
 - (instancetype)NSCFTimer_mtcpInstance_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
-    return [self innerInitWithFireDate:date interval:ti target:t selector:s userInfo:ui repeats:rep];
+    [self mtcp_prepareInitializationWithTarget:t Selector:s];
+    return [self NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_target selector:self.mtcp_sel userInfo:ui repeats:rep];
 }
 
-- (instancetype)innerInitWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
-    self.mtcp_timerStub = [[MTCrashProtectorTimerStub alloc] initWithTarget:t selector:s];
-    return [self NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_timerStub selector:@selector(stubTargetTimerFired:) userInfo:ui repeats:rep];
+/**
+ 根据是否由mainBundle调用进行初始化
+ */
+- (void)mtcp_prepareInitializationWithTarget:(id)t Selector:(SEL)s {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        self.mtcp_timerStub = [[MTCrashProtectorTimerStub alloc] initWithTarget:t selector:s];
+    }
+    self.mtcp_target = [MTCrashProtectorCallStackUtil isCalledByMainBundle] ? self.mtcp_timerStub : t;
+    self.mtcp_sel = [MTCrashProtectorCallStackUtil isCalledByMainBundle] ? @selector(stubTargetTimerFired:) : s;
 }
 
 #pragma mark - Associated Object
@@ -65,4 +79,21 @@ static const char *kMTCrashProtectorTimerStubAssociateKey = "kMTCrashProtectorTi
     objc_setAssociatedObject(self, &kMTCrashProtectorTimerStubAssociateKey, mtcp_timerStub, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+- (id)mtcp_target {
+    id target = objc_getAssociatedObject(self, &kMTCrashProtectorTargetAssociateKey);
+    return target;
+}
+
+- (void)setMtcp_target:(id)mtcp_target {
+    objc_setAssociatedObject(self, &kMTCrashProtectorTargetAssociateKey, mtcp_target, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (SEL)mtcp_sel {
+    SEL sel = NSSelectorFromString(objc_getAssociatedObject(self, &kMTCrashProtectorSELAssociateKey));
+    return sel;
+}
+
+- (void)setMtcp_sel:(SEL)mtcp_sel {
+    objc_setAssociatedObject(self, &kMTCrashProtectorSELAssociateKey, NSStringFromSelector(mtcp_sel), OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
 @end

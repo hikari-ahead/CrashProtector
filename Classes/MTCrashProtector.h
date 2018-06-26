@@ -1,4 +1,5 @@
 #import "MTCrashProtectorSetting.h"
+#import "MTCrashProtectorReporter.h"
 #import <objc/runtime.h>
 
 #define MTCrashProtectorInstanceMethodSwizzling(cls, oriStr, newStr) {\
@@ -29,3 +30,12 @@ method_exchangeImplementations(originalMethod, newMethod);\
 }\
 NSLog(@"MTCrashProtector Class Method Swizzling\n-> metacls:%@, ori:%@, new:%@ didAddMethod:%@", metacls, NSStringFromSelector(originalSEL), NSStringFromSelector(newSEL), didAddMethod ? @"YES" : @"NO");\
 }
+
+//#define IFCALLEDBYMAINBUNDLE(if_expr, else_expr) {\
+//if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {\
+//if_expr;\
+//}else {\
+//else_expr;\
+//}\
+//}
+

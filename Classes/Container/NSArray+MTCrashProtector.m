@@ -6,9 +6,9 @@
 //
 
 #import "NSArray+MTCrashProtector.h"
-#import "MTCrashProtector.h"
-#import "dlfcn.h"
 #import <UIKit/UIKit.h>
+#import "MTCrashProtector.h"
+#import "MTCrashProtectorCallStackUtil.h"
 
 @implementation NSArray (MTCrashProtector)
 + (void)load {
@@ -23,6 +23,7 @@
     });
 }
 
+#pragma mark - Swizzling
 /** NSArray, NSMutableArray, __NSPlaceholderArray, __NSArray0, __NSArrayI, __NSArrayM, __NSSingleObjectArrayI, __NSArrayReversed, __NSCFArray */
 + (void)swizzleObjectAtIndexedSubscript {
     // 对于操作符重载[]， iOS 11开始 __NSArrayI，__NSArrayM 对`objectAtIndexedSubscriptc`进行了重写，所以需要hook
@@ -72,64 +73,116 @@
 - (BOOL)isSubscriptOutOfBounds:(NSUInteger)idx {
     BOOL ofb = (idx >= self.count);
     if (ofb) {
-        // 记录堆栈信息
-        NSLog(@"##### cls: %@ idx: %ld is out of bounds", [self class], idx);
+        // 上报
+        NSString *reason = self.count > 0 ?
+        [NSString stringWithFormat:@"cls: %@, idx: %ld is out of bounds [0...%ld].", [self class], idx, (self.count - 1)] :
+        [NSString stringWithFormat:@"cls: %@, idx: %ld is out of bounds for a empty array.", [self class], idx];
+        NSError *error = [NSError errorWithDomain:MTCrashProtectorErrorDomain code:0 userInfo:@{MTCrashProtectorReporterReasonKey : reason}];
+        [[MTCrashProtectorReporter shareInstance] reportNonFatalEventWithError:error];
     }
     return ofb;
 }
 
 #pragma mark - __NSArray0
 - (id)__NSArray0_mtcpInstance_objectAtIndex:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArray0_mtcpInstance_objectAtIndex:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArray0_mtcpInstance_objectAtIndex:index]);
+    }else {
+        return [self __NSArray0_mtcpInstance_objectAtIndex:index];
+    }
 }
 
 - (id)__NSArray0_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArray0_mtcpInstance_objectAtIndexedSubscript:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArray0_mtcpInstance_objectAtIndexedSubscript:index]);
+    }else {
+        return [self __NSArray0_mtcpInstance_objectAtIndexedSubscript:index];
+    }
 }
 
 #pragma mark - __NSArrayI
 - (id)__NSArrayI_mtcpInstance_objectAtIndex:(NSUInteger)idx {
-    return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSArrayI_mtcpInstance_objectAtIndex:idx]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSArrayI_mtcpInstance_objectAtIndex:idx]);
+    }else {
+        return [self __NSArrayI_mtcpInstance_objectAtIndex:idx];
+    }
 }
 
 - (id)__NSArrayI_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArrayI_mtcpInstance_objectAtIndexedSubscript:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArrayI_mtcpInstance_objectAtIndexedSubscript:index]);
+    }else {
+        return [self __NSArrayI_mtcpInstance_objectAtIndexedSubscript:index];
+    }
 }
 
 #pragma mark - __NSArrayM
 - (id)__NSArrayM_mtcpInstance_objectAtIndex:(NSUInteger)idx {
-    return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSArrayM_mtcpInstance_objectAtIndex:idx]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSArrayM_mtcpInstance_objectAtIndex:idx]);
+    }else {
+        return [self __NSArrayM_mtcpInstance_objectAtIndex:idx];
+    }
 }
 
 - (id)__NSArrayM_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArrayM_mtcpInstance_objectAtIndexedSubscript:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArrayM_mtcpInstance_objectAtIndexedSubscript:index]);
+    }else {
+        return [self __NSArrayI_mtcpInstance_objectAtIndexedSubscript:index];
+    }
 }
 
 #pragma mark - __NSPlaceholderArray
 - (id)__NSPlaceholderArray_mtcpInstance_objectAtIndex:(NSUInteger)idx {
-    return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSPlaceholderArray_mtcpInstance_objectAtIndex:idx]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSPlaceholderArray_mtcpInstance_objectAtIndex:idx]);
+    }else {
+        return [self __NSPlaceholderArray_mtcpInstance_objectAtIndex:idx];
+    }
 }
 
 - (id)__NSPlaceholderArray_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSPlaceholderArray_mtcpInstance_objectAtIndexedSubscript:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSPlaceholderArray_mtcpInstance_objectAtIndexedSubscript:index]);
+    }else {
+        return [self __NSPlaceholderArray_mtcpInstance_objectAtIndexedSubscript:index];
+    }
 }
 
 #pragma mark - __NSArrayReversed 
 - (id)__NSArrayReversed_mtcpInstance_objectAtIndex:(NSUInteger)idx {
-    return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSArrayReversed_mtcpInstance_objectAtIndex:idx]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSArrayReversed_mtcpInstance_objectAtIndex:idx]);
+    }else {
+        return [self __NSArrayReversed_mtcpInstance_objectAtIndex:idx];
+    }
 }
 
 - (id)__NSArrayReversed_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArrayReversed_mtcpInstance_objectAtIndexedSubscript:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSArrayReversed_mtcpInstance_objectAtIndexedSubscript:index]);
+    }else {
+        return [self __NSArrayReversed_mtcpInstance_objectAtIndexedSubscript:index];
+    }
 }
 
 #pragma mark - __NSSingleObjectArrayI
 - (id)__NSSingleObjectArrayI_mtcpInstance_objectAtIndex:(NSUInteger)idx {
-    return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSSingleObjectArrayI_mtcpInstance_objectAtIndex:idx]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:idx] ? nil : [self __NSSingleObjectArrayI_mtcpInstance_objectAtIndex:idx]);
+    }else {
+        return [self __NSSingleObjectArrayI_mtcpInstance_objectAtIndex:idx];
+    }
 }
 
 - (id)__NSSingleObjectArrayI_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSSingleObjectArrayI_mtcpInstance_objectAtIndexedSubscript:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self __NSSingleObjectArrayI_mtcpInstance_objectAtIndexedSubscript:index]);
+    }else {
+        return [self __NSSingleObjectArrayI_mtcpInstance_objectAtIndexedSubscript:index];
+    }
 }
 
 #pragma mark - __NSCFArray nonSubscript
@@ -152,27 +205,40 @@
 
 #pragma mark - NSArray
 - (id)NSArray_mtcpInstance_objectAtIndex:(NSUInteger)index {
-    return ([self isSubscriptOutOfBounds:index] ? nil : [self NSArray_mtcpInstance_objectAtIndex:index]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:index] ? nil : [self NSArray_mtcpInstance_objectAtIndex:index]);
+    }else {
+        return [self NSArray_mtcpInstance_objectAtIndex:index];
+    }
 }
 
 - (id)NSArray_mtcpInstance_objectAtIndexedSubscript:(NSUInteger)idx {
-    return ([self isSubscriptOutOfBounds:idx] ? nil : [self NSArray_mtcpInstance_objectAtIndexedSubscript:idx]);
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        return ([self isSubscriptOutOfBounds:idx] ? nil : [self NSArray_mtcpInstance_objectAtIndexedSubscript:idx]);
+    }else {
+        return [self NSArray_mtcpInstance_objectAtIndexedSubscript:idx];
+    }
 }
 
 - (instancetype)mtcpInstance_initWithObjects:(id  _Nonnull const [])objects count:(NSUInteger)cnt {
-    __block BOOL hasNil = NO;
-    for (int i = 0; i < cnt; i++) {
-        if (objects[i] == nil) {
-            hasNil = YES;
-            break;
+    // TODO: fix crash and report.
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+        __block BOOL hasNil = NO;
+        for (int i = 0; i < cnt; i++) {
+            if (objects[i] == nil) {
+                hasNil = YES;
+                break;
+            }
         }
-    }
-    if (!hasNil) {
-        id ori = [self mtcpInstance_initWithObjects:objects count:cnt];
-        return ori;
+        if (!hasNil) {
+            id ori = [self mtcpInstance_initWithObjects:objects count:cnt];
+            return ori;
+        }else {
+            NSLog(@"调用initWithObjects时数据包含nil");
+            return nil;
+        }
     }else {
-        NSLog(@"调用initWithObjects时数据包含nil");
-        return nil;
+        return [self mtcpInstance_initWithObjects:objects count:cnt];
     }
 }
 @end
