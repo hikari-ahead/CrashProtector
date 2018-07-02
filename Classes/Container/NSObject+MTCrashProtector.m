@@ -25,12 +25,14 @@
 }
 
 - (id)mtcpInstance_valueForUndefinedKey:(NSString *)key {
+    [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"this class (%@) is not key value coding-compliant for the key %@.", NSStringFromClass([self class]), key]];
     NSLog(@"this class (%@) is not key value coding-compliant for the key %@.", NSStringFromClass([self class]), key);
     return nil;
 }
 
 - (id)mtcpInstance_valueForKey:(NSString *)key {
     if (!key) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, attempt to retrieve a value for a nil key", NSStringFromClass([self class])]];
         NSLog(@"attempt to retrieve a value for a nil key");
         return nil;
     }

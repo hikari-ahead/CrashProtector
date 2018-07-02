@@ -60,41 +60,42 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 
 #pragma mark - Add
 - (void)mtcpInstance_addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options context:(void *)context {
-//    if ([MTCrashProtectorCallStackUtil isInTargetBundleWithClass:[self class] selector:@selector(mtcpInstance_addObserver:forKeyPath:options:context:)]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
         [self.mtcp_observerDelegate stub_addObserver:observer forKeyPath:keyPath options:options context:context];
-//    }else {
-//        [self mtcpInstance_addObserver:observer forKeyPath:keyPath options:options context:context];
-//    }
+    }else {
+        [self mtcpInstance_addObserver:observer forKeyPath:keyPath options:options context:context];
+    }
     self.mtcp_hasAddedObserver = YES;
 }
 
 #pragma mark - Remove
 - (void)mtcpInstance_removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath {
-//    if ([MTCrashProtectorCallStackUtil isInTargetBundleWithClass:[self class] selector:@selector(mtcpInstance_removeObserver:forKeyPath:)]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
         [self.mtcp_observerDelegate stub_removeObserver:observer forKeyPath:keyPath];
-//    }else {
-//        [self mtcpInstance_removeObserver:observer forKeyPath:keyPath];
-//    }
+    }else {
+        [self mtcpInstance_removeObserver:observer forKeyPath:keyPath];
+    }
 }
 
 - (void)mtcpInstance_removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath context:(void *)context {
-//    if ([MTCrashProtectorCallStackUtil isInTargetBundleWithClass:[self class] selector:@selector(mtcpInstance_removeObserver:forKeyPath:context:)]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
         [self.mtcp_observerDelegate stub_removeObserver:observer forKeyPath:keyPath context:context];
-//    }else {
-//        [self mtcpInstance_removeObserver:observer forKeyPath:keyPath context:context];
-//    }
+    }else {
+        [self mtcpInstance_removeObserver:observer forKeyPath:keyPath context:context];
+    }
 }
 
 #pragma mark - Receive
 - (void)mtcpInstance_observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-//    if ([MTCrashProtectorCallStackUtil isInTargetBundleWithClass:[self class] selector:@selector(mtcpInstance_observeValueForKeyPath:ofObject:change:context:)]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
         [self.mtcp_observerDelegate stub_observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-//    }else {
-//        [self mtcpInstance_observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-//    }
+    }else {
+        [self mtcpInstance_observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, has not implemented %@.", [self class], NSStringFromSelector(@selector(observeValueForKeyPath:ofObject:change:context:))]];
     NSLog(@"走到这里说明某个类没有实现这个方法");
 }
 
@@ -129,13 +130,13 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 
 #pragma mark - Life Cycle
 - (void)mtcpInstanceObserver_dealloc {
-//    if ([MTCrashProtectorCallStackUtil isInTargetBundleWithClass:[self class] selector:@selector(mtcpInstance_dealloc)]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
         // 这里根据flag判断是不是需要removeAllObserver
         if (self.mtcp_hasAddedObserver) {
             // stub提供删除所有observer的方法
             [self.mtcp_observerDelegate stub_removeAllObservers];
         }
-//    }
+    }
     [self mtcpInstanceObserver_dealloc];
 }
 @end

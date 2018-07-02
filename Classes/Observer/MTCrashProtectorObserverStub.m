@@ -8,6 +8,7 @@
 #import "MTCrashProtectorObserverStub.h"
 #import "MTCrashProtectorObserverStubInfo.h"
 #import "NSObject+MTCrashProtectorObserverDelegate.h"
+#import "MTCrashProtectorReporter.h"
 
 @interface MTCrashProtectorObserverStub()
 @property (nonatomic, weak) NSObject *target;
@@ -43,6 +44,7 @@
             removedInfo = nil;
         }
     }else {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, %@ has not yet add one observer:%@ keyPath:%@, can not remove it", [self class], self.target, observer, keyPath]];
         NSLog(@"%@ has not yet add one observer:%@ keyPath:%@, can not remove it", self.target, observer, keyPath);
     }
 }
@@ -55,6 +57,7 @@
         self.lastRemovedInfoWithSpecificContext = matchedInfo;
         [self.target mtcpInstance_removeObserver:observer forKeyPath:keyPath context:context];
     }else {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, %@ has not yet add one observer:%@ keyPath:%@ context:%p, can not remove it", [self class], self.target, observer, keyPath, context]];
         NSLog(@"%@ has not yet add one observer:%@ keyPath:%@ context:%p, can not remove it", self.target, observer, keyPath, context);
     }
 }
@@ -70,6 +73,7 @@
 - (void)stub_addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options context:(nullable void *)context {
     MTCrashProtectorObserverStubInfo *info = [[MTCrashProtectorObserverStubInfo alloc] initWithObserver:observer keyPath:keyPath option:options context:context];
     if ([self obInfosContainsInfo:info]) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, %@ has already add an observer:%@ keyPath:%@ options:%ld context:%p, do not add it again", [self class] ,self.target, observer, keyPath, options, context]];
         NSLog(@"%@ has already add an observer:%@ keyPath:%@ options:%ld context:%p, do not add it again", self.target, observer, keyPath, options, context);
     }else {
         [self.obInfos addObject:info];
@@ -83,6 +87,7 @@
     if ([self obInfosContainsInfoOnlyCaseObserverKeyPathAndContext:info] && [self.target respondsToSelector:@selector(mtcpInstance_observeValueForKeyPath:ofObject:change:context:)]) {
         [self.target mtcpInstance_observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }else {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, no observer:%@ keyPath:%@ context:%p registered on %@, cannot send message", [self class], object, keyPath, context, self.target]];
         NSLog(@"no observer:%@ keyPath:%@ context:%p registered on %@, cannot send message", object, keyPath, context, self.target);
     }
 }

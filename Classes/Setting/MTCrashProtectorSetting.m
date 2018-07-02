@@ -9,7 +9,7 @@
 
 static MTCrashProtectorSetting *instance;
 @interface MTCrashProtectorSetting()
-@property (nonatomic, strong) NSDictionary *settingDic;
+@property (nonatomic, strong) NSMutableDictionary *settingDic;
 @end
 @implementation MTCrashProtectorSetting
 + (instancetype)shared {
@@ -51,15 +51,42 @@ static MTCrashProtectorSetting *instance;
     return [[self.settingDic valueForKey:@"enable"] boolValue];
 }
 
-- (NSDictionary *)settingDic {
+- (void)setProtectingEnable:(BOOL)protectingEnable {
+    self.settingDic[@"enable"] = [NSNumber numberWithBool:protectingEnable];
+    NSString *path = [self plistPath];
+    [NSFileManager.defaultManager removeItemAtPath:path error:nil];
+    [self.settingDic writeToFile:path atomically:YES];
+}
+
+- (NSMutableDictionary *)settingDic {
     if (!_settingDic) {
-//        NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-        NSBundle *bundle = [NSBundle mainBundle];
-        NSString *path = [bundle pathForResource:@"MTCrashProtectorSetting" ofType:@"plist"];
-        NSDictionary *dic = [NSDictionary dictionaryWithContentsOfFile:path];
-        _settingDic = dic;
+        NSString *path = [self plistPath];
+        BOOL plistExists = [NSFileManager.defaultManager fileExistsAtPath:path];
+        if (!plistExists) {
+            _settingDic = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                          @"Module": @{
+                                                                                  @"Container":@YES,
+                                                                                  @"NSTimer":@YES,
+                                                                                  @"Notification":@YES,
+                                                                                  @"Observer":@YES,
+                                                                                  @"Selector":@YES
+                                                                                  },
+                                                                          @"enable":@YES
+                                                                          }];
+            [_settingDic writeToFile:path atomically:YES];
+            return _settingDic;
+        }else {
+            _settingDic = [NSMutableDictionary dictionaryWithContentsOfFile:path];
+            return _settingDic;
+        }
     }
     return _settingDic;
+}
+
+- (NSString *)plistPath {
+    NSURL *documentURL = [NSFileManager.defaultManager URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
+    NSString *path = [documentURL.path stringByAppendingPathComponent:@"MTCrashProtectorSetting.plist"];
+    return path;
 }
 
 @end

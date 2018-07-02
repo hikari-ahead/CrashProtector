@@ -228,14 +228,14 @@ SEL oriSEL4 = NSSelectorFromString(@"dealloc");
     这个SEL其实是重载了操作符`[]`，不要直接调用这个方法，通过实验测试得知，iOS 11开始 `__NSArrayI`，`__NSArrayM` 对`objectAtIndexedSubscript:`进行了重写，所以需要hook，其他版本只需要hook父类`NSArray`中的这个方法即可。
     
 4. 可变部分的Methods
-
+    
     针对`__NSArrayM`需要hook以下方法：
     
     ```objC
-    @selector(addObject:);    
-    @selector(insertObject:atIndex:)
-    @selector(removeObjectAtIndex:))
-    @selector(replaceObjectAtIndex:withObject:)
+  @selector(addObject:);    
+  @selector(insertObject:atIndex:)
+  @selector(removeObjectAtIndex:))
+  @selector(replaceObjectAtIndex:withObject:)
     ```
     
     针对`NSMutableArray`需要hook以下方法：
@@ -268,4 +268,38 @@ SEL oriSEL4 = NSSelectorFromString(@"dealloc");
 主要为了解决`NSTimer`与`TureTarget`相互强引用导致不手动调用`invalidate`方法`TureTarget`无法自动释放的问题。加入中间类`TimerStub`作为`Timer`的`SubTarget`，并且储存真实的`TrueTarget`与`SEL`，其中`TimerStub`弱引用真实的`TrueTarget`，保证其可以自由的释放。每当目标函数触发时去检查`TrueTarget`是否还存在，存在的话去执行目标函数，不存在的话调用`- [Timer invalidate]`去释放。
 
 ![time](http://ocm1152jt.bkt.clouddn.com/timer.png)
+
+## 0x4. 上报
+
+由`MTCrashProtector`捕获处理的异常可以集中进行上报，宿主App通过设置
+
+```objC
+typedef void(^MTCrashProtectorReporterExecutionBlock)(NSError *error);
+@property (nonatomic, copy) MTCrashProtectorReporterExecutionBlock reporterExecutionBlock;
+```
+reporterExecutionBlock来实现真正的上报逻辑。
+`error.UserInfo`包含的信息如下:
+
+```json
+{
+    "reason": "xxxx",
+    "stack": "0	MTDZ\nCLSUserLoggingRecordError......"
+}
+```
+
+实现例子：
+
+```objc
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // ...
+    [Fabric with:@[[Crashlytics class]]];
+    [Crashlytics.sharedInstance setDebugMode:YES];
+    [MTCrashProtectorReporter.shareInstance setReporterExecutionBlock:^(NSError * _Nonnull error) {
+        // 上报拦截的异常
+        [Crashlytics.sharedInstance recordError:error];
+    }];
+    return YES;
+}
+```
+
 

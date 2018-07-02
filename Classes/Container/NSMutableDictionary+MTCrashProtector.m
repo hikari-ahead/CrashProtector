@@ -34,10 +34,12 @@
 #pragma mark - Set
 - (void)mtcpInstance_setObject:(id)anObject forKey:(id<NSCopying>)aKey {
     if (!anObject) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, cannot set nil object", [self class]]];
         NSLog(@"cannot set nil object");
         return;
     }
     if (!aKey) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, key can not be nil", [self class]]];
         NSLog(@"key can not be nil");
         return;
     }
@@ -46,6 +48,7 @@
 
 - (void)mtcpInstance_setObject:(id)obj forKeyedSubscript:(id<NSCopying>)key {
     if (!key) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, key can not be nil", [self class]]];
         NSLog(@"key can not be nil");
         return;
     }
@@ -55,6 +58,7 @@
 #pragma mark - Remove
 - (void)mtcpInstance_removeObjectForKey:(id)aKey {
     if (!aKey) {
+        [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, key can not be nil", [self class]]];
         NSLog(@"key can not be nil");
         return;
     }

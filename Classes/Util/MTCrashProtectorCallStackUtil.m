@@ -7,18 +7,32 @@
 
 #import "MTCrashProtectorCallStackUtil.h"
 #import "objc/runtime.h"
-#import "dlfcn.h"
+#import "execinfo.h"
+#include "unistd.h"
 
 @implementation MTCrashProtectorCallStackUtil
-+ (BOOL)isInTargetBundleWithClass:(Class)cls selector:(SEL)aSelector {
-    Dl_info info;
-    IMP imp = class_getMethodImplementation(cls, aSelector);
-    dladdr(imp, &info);
-    NSString *dli_fname = [NSString stringWithUTF8String:info.dli_fname];
-    NSString *mainBundleName = @"CrashProtectorDemo"; //TODO: 改为非写死
-    if ([dli_fname hasSuffix:mainBundleName]) {
-        return YES;
-    }
-    return NO;
++ (BOOL)isCalledByMainBundle {
+//    const char *name = [[[NSProcessInfo processInfo] processName] cStringUsingEncoding:NSUTF8StringEncoding];
+//    int nptrs;
+//#define SIZE 3
+//    void *buffer[3];
+//    char **strings;
+//    nptrs = backtrace(buffer, SIZE);
+//    strings = backtrace_symbols(buffer, nptrs);
+//    if (nptrs < 3) {
+//        // rarely
+//        free(strings);
+//        return NO;
+//    }else {
+//        char *bt = strings[2];
+//        const char *result = strstr(bt, name);
+//        if (result == NULL) {
+//            return NO;
+//        }else {
+//            return YES;
+//        }
+//    }
+    return YES;
 }
 @end
+
