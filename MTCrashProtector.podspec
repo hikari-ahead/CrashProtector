@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "MTCrashProtector"
-  s.version      = "0.0.5"
+  s.version      = "0.0.5.1"
   s.summary      = "To help APPs to get free from common crash such as `unregconized Selector`, `dealloc without removing observer` and `forget Timer invalidate issue` etc"
 
   # This description is used to generate tags and improve search results.
