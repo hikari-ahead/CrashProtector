@@ -44,14 +44,30 @@ static MTCrashProtectorSetting *instance;
             break;
     }
     BOOL state = [[[self.settingDic valueForKey:@"Module"] valueForKey:key] boolValue];
-    return state && self.protectingEnable;
+    return state && self.isEnablingProtecting && [self validSystemVersion];
 }
 
-- (BOOL)protectingEnable {
+- (BOOL)validSystemVersion {
+    NSString *max = [self.settingDic valueForKey:@"maxOSVersion"];
+    NSString *min = [self.settingDic valueForKey:@"minOSVersion"];
+    float current = UIDevice.currentDevice.systemVersion.floatValue;
+    if (!max && !min) {
+        return YES;
+    }
+    float fmax = max ? [max floatValue] : 0;
+    float fmin = min ? [min floatValue] : 0;
+    if (fmin <= current && fmax >= current) {
+        return YES;
+    }else {
+        return NO;
+    }
+}
+
+- (BOOL)isEnablingProtecting {
     return [[self.settingDic valueForKey:@"enable"] boolValue];
 }
 
-- (void)setProtectingEnable:(BOOL)protectingEnable {
+- (void)setIsEnablingProtecting:(BOOL)protectingEnable {
     self.settingDic[@"enable"] = [NSNumber numberWithBool:protectingEnable];
     NSString *path = [self plistPath];
     [NSFileManager.defaultManager removeItemAtPath:path error:nil];
@@ -71,7 +87,9 @@ static MTCrashProtectorSetting *instance;
                                                                                   @"Observer":@YES,
                                                                                   @"Selector":@YES
                                                                                   },
-                                                                          @"enable":@YES
+                                                                          @"enable": @YES,
+                                                                          @"maxOSVersion": @"11.99",
+                                                                          @"minOSVersion": @"9.0"
                                                                           }];
             [_settingDic writeToFile:path atomically:YES];
             return _settingDic;

@@ -77,7 +77,11 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 - (id<NSObject>)mtcpInstance_addObserverForName:(NSNotificationName)name
                                          object:(id)obj queue:(NSOperationQueue *)queue
                                      usingBlock:(void (^)(NSNotification *note))block {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if (!self.mtcp_notificationDelegate) {
+        MTCrashProtectorNotificationStub *delegate = [[MTCrashProtectorNotificationStub alloc] initWithTarget:self];
+        [self setMtcp_notificationDelegate:delegate];
+    }
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         return [self.mtcp_notificationDelegate stub_addObserverForName:name object:obj queue:queue usingBlock:block];
     }else {
         return [self mtcpInstance_addObserverForName:name object:obj queue:queue usingBlock:block];
@@ -88,7 +92,11 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
                         selector:(SEL)aSelector
                             name:(NSNotificationName)aName
                           object:(id)anObject {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if (!self.mtcp_notificationDelegate) {
+        MTCrashProtectorNotificationStub *delegate = [[MTCrashProtectorNotificationStub alloc] initWithTarget:self];
+        [self setMtcp_notificationDelegate:delegate];
+    }
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         [self.mtcp_notificationDelegate stub_addObserver:observer selector:aSelector name:aName object:anObject];
     }else {
         [self mtcpInstance_addObserver:observer selector:aSelector name:aName object:anObject];
@@ -99,7 +107,7 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 - (void)mtcpInstance_removeObserver:(id)observer
                                name:(NSNotificationName)aName
                              object:(id)anObject {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         [self.mtcp_notificationDelegate stub_removeObserver:observer name:aName object:anObject];
     }else {
         [self mtcpInstance_removeObserver:observer name:aName object:anObject];
@@ -107,7 +115,7 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 }
 
 - (void)mtcpInstance_removeObserver:(id)observer {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         [self.mtcp_notificationDelegate stub_removeObserver:observer];
     }else {
         [self mtcpInstance_removeObserver:observer];
@@ -116,7 +124,7 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 
 #pragma mark - Post
 - (void)mtcpInstance_postNotification:(NSNotification *)notification {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         [self.mtcp_notificationDelegate stub_postNotification:notification];
     }else {
         [self mtcpInstance_postNotification:notification];
@@ -126,7 +134,7 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 - (void)mtcpInstance_postNotificationName:(NSNotificationName)aName
                                    object:(id)anObject
                                  userInfo:(NSDictionary *)aUserInfo {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         [self.mtcp_notificationDelegate stub_postNotificationName:aName object:anObject userInfo:aUserInfo];
     }else {
         [self mtcpInstance_postNotificationName:aName object:anObject userInfo:aUserInfo];
@@ -135,7 +143,7 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 
 - (void)mtcpInstance_postNotificationName:(NSNotificationName)aName
                                    object:(id)anObject {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_notificationDelegate) {
         [self.mtcp_notificationDelegate stub_postNotificationName:aName object:anObject];
     }else {
         [self mtcpInstance_postNotificationName:aName object:anObject];
@@ -145,13 +153,7 @@ static const char *kMTCrashProtectorNotificationDelegateAssociateKey = "kMTCrash
 #pragma mark - Associated Object
 - (MTCrashProtectorNotificationStub *)mtcp_notificationDelegate {
     MTCrashProtectorNotificationStub *instance = objc_getAssociatedObject(self, &kMTCrashProtectorNotificationDelegateAssociateKey);
-    if (instance) {
-        return instance;
-    }else {
-        MTCrashProtectorNotificationStub *delegate = [[MTCrashProtectorNotificationStub alloc] initWithTarget:self];
-        [self setMtcp_notificationDelegate:delegate];
-        return delegate;
-    }
+    return instance;
 }
 
 - (void)setMtcp_notificationDelegate:(MTCrashProtectorNotificationStub *)mtcp_notificationDelegate {

@@ -57,10 +57,13 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
     });
 }
 
-
 #pragma mark - Add
 - (void)mtcpInstance_addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options context:(void *)context {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if (!self.mtcp_observerDelegate) {
+        MTCrashProtectorObserverStub *stub = [[MTCrashProtectorObserverStub alloc] initWithTarget:self];
+        [self setMtcp_observerDelegate:stub];
+    }
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
         [self.mtcp_observerDelegate stub_addObserver:observer forKeyPath:keyPath options:options context:context];
     }else {
         [self mtcpInstance_addObserver:observer forKeyPath:keyPath options:options context:context];
@@ -70,7 +73,7 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 
 #pragma mark - Remove
 - (void)mtcpInstance_removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
         [self.mtcp_observerDelegate stub_removeObserver:observer forKeyPath:keyPath];
     }else {
         [self mtcpInstance_removeObserver:observer forKeyPath:keyPath];
@@ -78,7 +81,7 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 }
 
 - (void)mtcpInstance_removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath context:(void *)context {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
         [self.mtcp_observerDelegate stub_removeObserver:observer forKeyPath:keyPath context:context];
     }else {
         [self mtcpInstance_removeObserver:observer forKeyPath:keyPath context:context];
@@ -87,7 +90,7 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 
 #pragma mark - Receive
 - (void)mtcpInstance_observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
         [self.mtcp_observerDelegate stub_observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }else {
         [self mtcpInstance_observeValueForKeyPath:keyPath ofObject:object change:change context:context];
@@ -102,13 +105,7 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 #pragma mark - Associated Object
 - (MTCrashProtectorObserverStub *)mtcp_observerDelegate {
     MTCrashProtectorObserverStub *instance = objc_getAssociatedObject(self, &kMTCPObserverDelegateAssociateKey);
-    if (instance) {
-        return instance;
-    }else {
-        MTCrashProtectorObserverStub *delegate = [[MTCrashProtectorObserverStub alloc] initWithTarget:self];
-        [self setMtcp_observerDelegate:delegate];
-        return delegate;
-    }
+    return instance;
 }
 
 - (void)setMtcp_observerDelegate:(MTCrashProtectorObserverStub *)delegate {
@@ -130,7 +127,7 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 
 #pragma mark - Life Cycle
 - (void)mtcpInstanceObserver_dealloc {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
         // 这里根据flag判断是不是需要removeAllObserver
         if (self.mtcp_hasAddedObserver) {
             // stub提供删除所有observer的方法

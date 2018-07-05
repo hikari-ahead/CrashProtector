@@ -22,8 +22,9 @@ enum MTCrashProtectorModule: int {
 
 @interface MTCrashProtectorSetting : NSObject
 /** 总开关，所有模块默认开启，可以通过设置disabledModules部分关闭 */
-@property (nonatomic, assign) BOOL protectingEnable;
+@property (nonatomic, assign) BOOL isEnablingProtecting;
 //@property (nonatomic, strong) NSArray<NSNumber *> *disabledModules;
+
 + (instancetype)shared;
 - (BOOL)enableStateForModule:(int)m;
 @end

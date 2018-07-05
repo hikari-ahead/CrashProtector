@@ -106,7 +106,7 @@ Pod::Spec.new do |s|
   #
 
   # s.resource  = "icon.png"
-   s.resources = "Classes/Setting/*.plist"
+  # s.resources = "Classes/Setting/*.plist"
 
   # s.preserve_paths = "FilesToSave", "MoreFilesToSave"
 
