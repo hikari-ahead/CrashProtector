@@ -227,12 +227,12 @@
 }
 
 - (void)mtcpInstance_replaceObjectsInRange:(NSRange)range withObjectsFromArray:(NSArray *)otherArray range:(NSRange)otherRange {
-    if (NSMaxRange(range) - 1 > self.count) {
+    if (MIN(NSMaxRange(range) - 1, NSMaxRange(range)) > self.count) {
         [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, range {%lu .. %lu} exceeds array bounds", [self class], (unsigned long)range.location, NSMaxRange(range) - 1]];
         NSLog(@"range {%lu .. %lu} exceeds array bounds", (unsigned long)range.location, NSMaxRange(range) - 1);
         return;
     }
-    if (NSMaxRange(otherRange) - 1 > otherArray.count || !otherArray) {
+    if (MIN(NSMaxRange(otherRange) - 1, NSMaxRange(range)) > otherArray.count || !otherArray) {
         if (!otherArray) {
             [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, otherRange {%lu .. %lu} exceeds otherArray bounds, cause otherArray is nil", [self class], (unsigned long)otherRange.location, NSMaxRange(otherRange) - 1]];
             NSLog(@"otherRange {%lu .. %lu} exceeds otherArray bounds, cause otherArray is nil", (unsigned long)otherRange.location, NSMaxRange(otherRange) - 1);
@@ -246,7 +246,7 @@
 }
 
 - (void)mtcpInstance_replaceObjectsInRange:(NSRange)range withObjectsFromArray:(NSArray *)otherArray {
-    if (NSMaxRange(range) - 1 > self.count) {
+    if (MIN(NSMaxRange(range) - 1, NSMaxRange(range)) > self.count) {
         [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, range {%lu .. %lu} exceeds array bounds", [self class], (unsigned long)range.location, NSMaxRange(range) - 1]];
         NSLog(@"range {%lu .. %lu} exceeds array bounds", (unsigned long)range.location, NSMaxRange(range) - 1);
         return;
