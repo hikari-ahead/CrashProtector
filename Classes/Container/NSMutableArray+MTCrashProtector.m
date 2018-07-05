@@ -185,7 +185,7 @@
         NSLog(@"object cannot be nil");
         return;
     }
-    if (idx > self.count - 1) {
+    if (idx > self.count) {
         [MTCrashProtectorReporter.shareInstance reportErrorWithReason:[NSString stringWithFormat:@"cls:%@, index out of bounds, can not set object", [self class]]];
         NSLog(@"index out of bounds, can not set object");
         return;
