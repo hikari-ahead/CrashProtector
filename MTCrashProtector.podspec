@@ -16,8 +16,8 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "MTCrashProtector"
-  s.version      = "0.0.3"
-  s.summary      = "A short description of MTCrashProtector."
+  s.version      = "0.0.4"
+  s.summary      = "To help APPs to get free from common crash such as `unregconized Selector`, `dealloc without removing observer` and `forget Timer invalidate issue` etc"
 
   # This description is used to generate tags and improve search results.
   #   * Think: What does it do? Why did you write it? What is the focus?
