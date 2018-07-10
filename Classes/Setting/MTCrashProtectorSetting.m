@@ -8,6 +8,7 @@
 #import "MTCrashProtectorSetting.h"
 
 static MTCrashProtectorSetting *instance;
+NSString *kSettingVersion = @"0052";
 @interface MTCrashProtectorSetting()
 @property (nonatomic, strong) NSMutableDictionary *settingDic;
 @end
@@ -79,6 +80,16 @@ static MTCrashProtectorSetting *instance;
         // Document目录
         NSString *path = [self plistPath];
         BOOL plistExists = [NSFileManager.defaultManager fileExistsAtPath:path];
+        if (plistExists) {
+            // 判断版本号
+            _settingDic = [NSMutableDictionary dictionaryWithContentsOfFile:path];
+            if ([_settingDic valueForKey:@"settingVersion"] && [[_settingDic valueForKey:@"settingVersion"] integerValue] == [kSettingVersion integerValue]) {
+                return _settingDic;
+            }else {
+                [NSFileManager.defaultManager removeItemAtPath:path error:nil];
+                plistExists = NO;
+            }
+        }
         if (!plistExists) {
             // mainBundle是否存在手动配置的
             NSString *bPath = [[NSBundle mainBundle] pathForResource:@"MTCrashProtectorSetting" ofType:@"plist"];
@@ -88,7 +99,9 @@ static MTCrashProtectorSetting *instance;
                 [NSFileManager.defaultManager copyItemAtPath:bPath toPath:path error:&copyError];
                 if (!copyError) {
                     _settingDic = [NSMutableDictionary dictionaryWithContentsOfFile:path];
-                    return _settingDic;
+                    if ([_settingDic valueForKey:@"settingVersion"] && [[_settingDic valueForKey:@"settingVersion"] integerValue] == [kSettingVersion integerValue]) {
+                        return _settingDic;
+                    }
                 }
             }
             // copy失败，并且bundle中不存在
@@ -101,15 +114,13 @@ static MTCrashProtectorSetting *instance;
                                                                                       @"Observer":@YES,
                                                                                       @"Selector":@YES
                                                                                       },
-                                                                              @"enable": @YES,
+                                                                              @"enable": @NO,
                                                                               @"maxOSVersion": @"11.99",
-                                                                              @"minOSVersion": @"9.0"
+                                                                              @"minOSVersion": @"9.0",
+                                                                              @"settingVersion": kSettingVersion
                                                                               }];
                 [_settingDic writeToFile:path atomically:YES];
             }
-            return _settingDic;
-        }else {
-            _settingDic = [NSMutableDictionary dictionaryWithContentsOfFile:path];
             return _settingDic;
         }
     }
