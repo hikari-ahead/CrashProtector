@@ -79,11 +79,11 @@
         return;
     }
     __block BOOL ofb = NO;
-    __block NSUInteger cnt = objects.count;
+    __block NSUInteger cnt = self.count;
     __block NSUInteger ofbIdx = 0;
     // 判断insert之后是否会出现越界的情况
     [indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
-        if (idx > objects.count) {
+        if (idx > cnt) {
             ofb = YES;
             ofbIdx = idx;
             *stop = YES;
