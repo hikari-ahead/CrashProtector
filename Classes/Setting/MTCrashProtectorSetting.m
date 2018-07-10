@@ -8,7 +8,7 @@
 #import "MTCrashProtectorSetting.h"
 
 static MTCrashProtectorSetting *instance;
-NSString *kSettingVersion = @"0052";
+NSString *kSettingVersion = @"0053";
 @interface MTCrashProtectorSetting()
 @property (nonatomic, strong) NSMutableDictionary *settingDic;
 @end
