@@ -62,11 +62,12 @@ static const char *kMTCrashProtectorSELAssociateKey = "kMTCrashProtectorSELAssoc
  根据是否由mainBundle调用进行初始化
  */
 - (void)mtcp_prepareInitializationWithTarget:(id)t Selector:(SEL)s {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    BOOL isPrivateSysTargetOrSEL = [NSStringFromClass([t class]) hasPrefix:@"_"] || [NSStringFromSelector(s) hasPrefix:@"_"];
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && !isPrivateSysTargetOrSEL) {
         self.mtcp_timerStub = [[MTCrashProtectorTimerStub alloc] initWithTarget:t selector:s];
     }
-    self.mtcp_target = [MTCrashProtectorCallStackUtil isCalledByMainBundle] ? self.mtcp_timerStub : t;
-    self.mtcp_sel = [MTCrashProtectorCallStackUtil isCalledByMainBundle] ? @selector(stubTargetTimerFired:) : s;
+    self.mtcp_target = ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && !isPrivateSysTargetOrSEL) ? self.mtcp_timerStub : t;
+    self.mtcp_sel = ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && !isPrivateSysTargetOrSEL) ? @selector(stubTargetTimerFired:) : s;
 }
 
 #pragma mark - Associated Object
