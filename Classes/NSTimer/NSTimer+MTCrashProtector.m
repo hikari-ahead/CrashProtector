@@ -45,28 +45,33 @@ static const char *kMTCrashProtectorSELAssociateKey = "kMTCrashProtectorSELAssoc
 
 - (instancetype)__NSCFTimer_mtcpInstance_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
     [self mtcp_prepareInitializationWithTarget:t Selector:s];
-    return [self __NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_target selector:self.mtcp_sel userInfo:ui repeats:rep];
+    return [self __NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:([self useOriParams] ? t : self.mtcp_target) selector:([self useOriParams] ? s : self.mtcp_sel) userInfo:ui repeats:rep];
 }
 
 - (instancetype)mtcpInstance_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
     [self mtcp_prepareInitializationWithTarget:t Selector:s];
-    return [self mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_target selector:self.mtcp_sel userInfo:ui repeats:rep];
+    return [self mtcpInstance_initWithFireDate:date interval:ti target:([self useOriParams] ? t : self.mtcp_target) selector:([self useOriParams] ? s : self.mtcp_sel) userInfo:ui repeats:rep];
 }
 
 - (instancetype)NSCFTimer_mtcpInstance_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)ti target:(id)t selector:(SEL)s userInfo:(id)ui repeats:(BOOL)rep {
     [self mtcp_prepareInitializationWithTarget:t Selector:s];
-    return [self NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:self.mtcp_target selector:self.mtcp_sel userInfo:ui repeats:rep];
+    return [self NSCFTimer_mtcpInstance_initWithFireDate:date interval:ti target:([self useOriParams] ? t : self.mtcp_target) selector:([self useOriParams] ? s : self.mtcp_sel) userInfo:ui repeats:rep];
+}
+
+- (BOOL)useOriParams {
+    return (self.mtcp_target && self.mtcp_sel);
 }
 
 /**
  根据是否由mainBundle调用进行初始化
  */
 - (void)mtcp_prepareInitializationWithTarget:(id)t Selector:(SEL)s {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle]) {
+    BOOL isPrivateSysTargetOrSEL = [NSStringFromClass([t class]) hasPrefix:@"_"] || [NSStringFromSelector(s) hasPrefix:@"_"];
+    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && !isPrivateSysTargetOrSEL) {
         self.mtcp_timerStub = [[MTCrashProtectorTimerStub alloc] initWithTarget:t selector:s];
+        self.mtcp_target = self.mtcp_timerStub;
+        self.mtcp_sel = @selector(stubTargetTimerFired:);
     }
-    self.mtcp_target = [MTCrashProtectorCallStackUtil isCalledByMainBundle] ? self.mtcp_timerStub : t;
-    self.mtcp_sel = [MTCrashProtectorCallStackUtil isCalledByMainBundle] ? @selector(stubTargetTimerFired:) : s;
 }
 
 #pragma mark - Associated Object
