@@ -7,8 +7,9 @@
 
 #import "MTCrashProtectorObserverStubInfo.h"
 
-@interface MTCrashProtectorObserverStubInfo()
-@property (nonatomic, strong) NSObject *observer;
+@interface MTCrashProtectorObserverStubInfo() {
+    __unsafe_unretained NSObject *_observer;
+}
 @property (nonatomic, strong) NSString *keyPath;
 @property (nonatomic, assign) NSKeyValueObservingOptions option;
 @property (nonatomic, assign) void* context;
@@ -18,12 +19,18 @@
 - (instancetype)initWithObserver:(NSObject *)observer keyPath:(NSString *)keyPath option:(NSKeyValueObservingOptions)option context:(nullable void *)context {
     self = [super init];
     if (self) {
-        self.observer = observer;
+        if (observer) {
+            _observer = observer;
+        }
         self.keyPath = keyPath;
         self.option = option;
         self.context = context;
     }
     return self;
+}
+
+- (NSObject *)observer {
+    return _observer;
 }
 
 - (instancetype)initWithObserver:(NSObject *)observer keyPath:(NSString *)keyPath option:(NSKeyValueObservingOptions)option {

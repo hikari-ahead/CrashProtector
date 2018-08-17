@@ -10,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MTCrashProtectorObserverStubInfo : NSObject
-@property (nonatomic, strong, readonly) NSObject *observer;
+@property (nonatomic, weak, readonly) NSObject *observer;
 @property (nonatomic, strong, readonly) NSString *keyPath;
 @property (nonatomic, assign, readonly) NSKeyValueObservingOptions option;
 @property (nonatomic, assign, readonly) void* context;

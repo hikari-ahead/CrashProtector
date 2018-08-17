@@ -7,7 +7,10 @@
 
 #import "MTCrashProtectorNotificationStubInfo.h"
 
-@interface MTCrashProtectorNotificationStubInfo()
+@interface MTCrashProtectorNotificationStubInfo() {
+    __unsafe_unretained id _mObserver;
+    __unsafe_unretained id _mObject;
+}
 @property (nonatomic, strong) id object;
 @property (nonatomic, copy) NSNotificationName name;
 @property (nonatomic, strong) NSOperationQueue *queue;
@@ -18,12 +21,24 @@
 - (instancetype)initWithObserver:(id)observer selector:(SEL)aSelector name:(NSNotificationName)name object:(id)object {
     self = [super init];
     if (self) {
-        self.observer = observer;
+        if (observer) {
+            _mObserver = observer;
+        }
+        if (object) {
+            _mObject = object;
+        }
         self.selector = aSelector;
         self.name = name;
-        self.object = object;
     }
     return self;
+}
+
+- (id)observer {
+    return _mObserver;
+}
+
+- (id)object {
+    return _mObject;
 }
 
 - (instancetype)initWithName:(NSNotificationName)name object:(id)object queue:(NSOperationQueue *)queue block:(MTCrashProtectorNotificationStubInfoBlock)block {

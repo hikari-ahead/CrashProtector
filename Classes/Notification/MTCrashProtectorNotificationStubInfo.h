@@ -9,7 +9,7 @@
 
 typedef void(^MTCrashProtectorNotificationStubInfoBlock)(NSNotification *note);
 @interface MTCrashProtectorNotificationStubInfo : NSObject
-@property (nonatomic, strong) id observer;
+@property (nonatomic, strong, readonly) id observer;
 @property (nonatomic, strong, readonly) id object;
 @property (nonatomic, copy, readonly) NSNotificationName name;
 @property (nonatomic, strong, readonly) NSOperationQueue *queue;
