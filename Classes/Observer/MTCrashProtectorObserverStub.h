@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface MTCrashProtectorObserverStub : NSObject <MTCrashProtectorObserverStubDelegate>
-@property (nonatomic, weak, readonly) NSObject *target;
+@property (nonatomic, weak) NSObject *target;
 - (instancetype)initWithTarget:(NSObject *)target;
 @end
 

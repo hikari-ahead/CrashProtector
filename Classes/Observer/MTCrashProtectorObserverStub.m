@@ -10,8 +10,9 @@
 #import "NSObject+MTCrashProtectorObserverDelegate.h"
 #import "MTCrashProtectorReporter.h"
 
-@interface MTCrashProtectorObserverStub()
-@property (nonatomic, weak) NSObject *target;
+@interface MTCrashProtectorObserverStub() {
+    __unsafe_unretained NSObject *_mTarget;
+}
 @property (nonatomic, strong) NSMutableArray<MTCrashProtectorObserverStubInfo *> *obInfos;
 /** a flag to indicate which info will be remove after calling `stub_removeObserver:forKeyPath:context:` */
 @property (nonatomic, strong) MTCrashProtectorObserverStubInfo *lastRemovedInfoWithSpecificContext;
@@ -20,12 +21,15 @@
 - (instancetype)initWithTarget:(NSObject *)target {
     self = [super init];
     if (self) {
-        self.target = target;
+        _mTarget = target;
         self.obInfos = [NSMutableArray new];
     }
     return self;
 }
 
+- (NSObject *)target {
+    return _mTarget;
+}
 #pragma mark - Remove
 - (void)stub_removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath {
     MTCrashProtectorObserverStubInfo *info = [[MTCrashProtectorObserverStubInfo alloc] initWithObserver:observer keyPath:keyPath];
