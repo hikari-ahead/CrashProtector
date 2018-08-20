@@ -127,13 +127,13 @@ static const char *kMTCPObserverHasAddedObserverFlagAssociateKey = "kMTCPObserve
 
 #pragma mark - Life Cycle
 - (void)mtcpInstanceObserver_dealloc {
-    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
-        // 这里根据flag判断是不是需要removeAllObserver
-        if (self.mtcp_hasAddedObserver) {
-            // stub提供删除所有observer的方法
-            [self.mtcp_observerDelegate stub_removeAllObservers];
-        }
-    }
+//    if ([MTCrashProtectorCallStackUtil isCalledByMainBundle] && self.mtcp_observerDelegate) {
+//        // 这里根据flag判断是不是需要removeAllObserver
+//        if (self.mtcp_hasAddedObserver) {
+//            // stub提供删除所有observer的方法
+//            [self.mtcp_observerDelegate stub_removeAllObservers];
+//        }
+//    }
     [self mtcpInstanceObserver_dealloc];
 }
 @end
